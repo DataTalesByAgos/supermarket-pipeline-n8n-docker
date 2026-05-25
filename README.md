@@ -17,6 +17,7 @@ Este proyecto es un pipeline ETL automatizado que extrae precios de supermercado
 ---
 
 ## 🏗️ Arquitectura
+![Workflow n8n](workflown8n.png)
 ---
 
 ## ⚙️ Cómo funciona
