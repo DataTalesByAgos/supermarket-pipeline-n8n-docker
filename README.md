@@ -1,5 +1,5 @@
 # Supermarket-pipeline-n8n-docker
-Este proyecto es un pipeline ETL automatizado que extrae precios de supermercados, los valida y los carga en una base de datos MySQL. Todo el flujo está orquestado con **n8n**, ejecutado con **Docker** y programado automáticamente.
+Este proyecto es un pipeline ETL automatizado que ejecuta un script local que extrae precios de supermercados, los valida y los carga en una base de datos MySQL. Todo el flujo está orquestado con n8n, ejecutado con Docker y programado automáticamente. 
 
 ---
 
