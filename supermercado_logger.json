@@ -1,0 +1,148 @@
+{
+  "name": "supermercado_logger",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 14 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "b5dd59cb-6be6-4f37-ae56-40ff67edfd23",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const { execSync } = require('child_process');\n\nlet success = true;\nlet output = '';\nlet error = '';\n\ntry {\n  output = execSync(\n    'cmd /c C:\\\\Users\\\\???\\\\Desktop\\\\run-docker.bat',\n    { encoding: 'utf8' }\n  );\n} catch (err) {\n  success = false;\n  error = err.message;\n  output = err.stdout || '';\n}\n\nreturn [{\n  json: {\n    success,\n    output,\n    error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        0
+      ],
+      "id": "c1437496-19e5-4da9-a595-b65cab0dd5ae",
+      "name": "Run Supermercado Pipeline"
+    },
+    {
+      "parameters": {
+        "chatId": "what are u lurking for??? just dm me",
+        "text": "=🚀 WORKFLOW EJECUTADO\n\n🕒 Fecha:\n{{$now.toISO()}}\n\n🐳 Comando:\ndocker-compose run --rm app python main.py --manual\n\n📊 Estado:\n{{$json.success ? \"✅ EXITOSO\" : \"❌ FALLÓ\"}}\n\n📄 Archivo CSV:\nmercado_logs.csv\n\n📝 Resumen:\n{{$json.output ? $json.output.substring(0, 800) : \"Sin salida\"}}\n\n⚠️ Error:\n{{$json.error || \"Sin errores\"}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "9d2575e0-780f-4a6b-bdf4-461887d31d41",
+      "name": "Status final del pipeline",
+      "webhookId": "4f017c25-7c69-45a9-b834-2668b0efdee9",
+      "credentials": {
+        "telegramApi": {
+          "id": "PYCRWAn1kUjnshVt",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\n\nconst path = 'C:\\\\Users\\\\???\\\\Desktop\\\\mercado_logs.csv';\n\nconst now = new Date().toISOString();\n\nconst success = $json.success;\n\nconst rawText = ($json.output || $json.error || '');\n\nconst output = String(rawText)\n  .replace(/\\n/g, ' ')\n  .replace(/,/g, ';')\n  .replace(/\"/g, \"'\")\n  .slice(0, 2000);\n\nconst statusText = success ? 'OK' : 'ERROR';\n\nconst line = `${now},${statusText},\"${output}\"\\n`;\n\nlet saved = true;\nlet error = '';\n\ntry {\n  fs.appendFileSync(path, line);\n} catch (err) {\n  saved = false;\n  error = err.message;\n}\n\nreturn [{\n  json: {\n    success,\n    saved,\n    line,\n    error\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -112
+      ],
+      "id": "9cf300b6-4b28-4ecb-ad22-f48569596690",
+      "name": "Guardar log en CSV"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\n\nconst match = output.match(/=== PIPELINE_RESULT ===\\s*([\\s\\S]*)/);\n\nlet result = null;\n\nif (match) {\n  try {\n    result = JSON.parse(match[1]);\n  } catch (e) {\n    result = null;\n  }\n}\n\nreturn [{\n  json: {\n    ...$json,\n    result\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        64
+      ],
+      "id": "2c2d93ba-ec87-45c1-a25f-92ada2af9e55",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run Supermercado Pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Supermercado Pipeline": {
+      "main": [
+        [
+          {
+            "node": "Guardar log en CSV",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar log en CSV": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Status final del pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "0d7a4e36-ff05-45d6-9bcd-113ee0cd34a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "???"
+  },
+  "id": "XNfons2NzVMb1bpu",
+  "tags": []
+}
